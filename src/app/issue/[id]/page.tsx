@@ -3,13 +3,15 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth-options";
 import { getIssue } from "@/lib/api";
-import IssueActions from "./issue-actions";
+import IssueActions, { STATUS_COLORS } from "./issue-actions";
 
 interface IssueDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function IssueDetailPage({ params }: IssueDetailPageProps) {
+export default async function IssueDetailPage({
+  params,
+}: IssueDetailPageProps) {
   const { id } = await params;
 
   const session = await getServerSession(authOptions);
@@ -21,8 +23,10 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
   if (isNaN(issueId)) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl font-bold text-red-600 mb-2">Invalid issue ID</h1>
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-xl font-bold text-red-600 mb-2">
+            Invalid issue ID
+          </h1>
           <Link
             href="/dashboard"
             className="text-blue-600 hover:text-blue-500 underline"
@@ -39,7 +43,7 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
   if (!result.ok) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {result.status === 404 ? (
             <>
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
@@ -81,19 +85,10 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
 
   const issue = result.data.issue;
 
-  const statusColors: Record<string, string> = {
-    OPEN: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    IN_PROGRESS:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-    RESOLVED:
-      "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-    WONT_FIX: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
@@ -106,14 +101,14 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
           </div>
           <Link
             href="/api/auth/signout"
-            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+            className="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             Sign out
           </Link>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg">
           {/* Issue header */}
           <div className="px-6 pt-6">
@@ -128,7 +123,7 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
           {/* Meta info */}
           <div className="px-6 mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
             <span
-              className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[issue.status] || ""}`}
+              className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${STATUS_COLORS[issue.status]}`}
             >
               {issue.status.replace("_", " ")}
             </span>

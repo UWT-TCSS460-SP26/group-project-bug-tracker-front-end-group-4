@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { Issue, Pagination, IssueStatus, SortByField, SortOrder } from "@/lib/types";
@@ -11,7 +12,7 @@ const STATUS_COLORS: Record<IssueStatus, string> = {
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   RESOLVED:
     "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  WONT_FIX: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
+  WONT_FIX: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
 };
 
 const SORT_LABELS: Record<SortByField, string> = {
@@ -38,6 +39,12 @@ export default function IssueList({
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const [localStatus, setLocalStatus] = useState(currentStatus);
+
+  useEffect(() => {
+    setLocalStatus(currentStatus);
+  }, [currentStatus]);
+
   function updateQuery(updates: Record<string, string | string[] | undefined>) {
     const next = new URLSearchParams(searchParams.toString());
 
@@ -61,10 +68,10 @@ export default function IssueList({
 
   function toggleStatus(status: IssueStatus) {
     const current = new Set(
-      Array.isArray(currentStatus)
-        ? currentStatus
-        : currentStatus
-          ? [currentStatus]
+      Array.isArray(localStatus)
+        ? localStatus
+        : localStatus
+          ? [localStatus]
           : []
     );
 
@@ -75,13 +82,14 @@ export default function IssueList({
     }
 
     const arr = Array.from(current);
+    setLocalStatus(arr.length > 0 ? arr : undefined);
     updateQuery({ status: arr.length > 0 ? arr : undefined });
   }
 
   function isStatusActive(status: IssueStatus): boolean {
-    if (!currentStatus) return false;
-    if (Array.isArray(currentStatus)) return currentStatus.includes(status);
-    return currentStatus === status;
+    if (!localStatus) return false;
+    if (Array.isArray(localStatus)) return localStatus.includes(status);
+    return localStatus === status;
   }
 
   function formatDate(iso: string): string {
@@ -109,7 +117,7 @@ export default function IssueList({
       <div className="flex flex-wrap items-center gap-4 mb-6">
         {/* Status filter chips */}
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mr-1">
+          <span className="text-sm font-bold text-gray-600 dark:text-gray-300">
             Status:
           </span>
           {ISSUE_STATUSES.map((status) => (
@@ -132,7 +140,7 @@ export default function IssueList({
 
         {/* Sort controls */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span className="text-sm font-bold text-gray-600 dark:text-gray-300">
             Sort:
           </span>
           <select
@@ -186,11 +194,11 @@ export default function IssueList({
               {issues.map((issue) => (
                 <tr
                   key={issue.id}
-                  className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors"
+                  className="bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <td className="pl-4 py-3 w-0">
                     <span
-                      className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${
+                      className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${
                         STATUS_COLORS[issue.status]
                       }`}
                     >

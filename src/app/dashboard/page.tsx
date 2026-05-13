@@ -52,8 +52,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               Not authorized
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Your account does not have admin access. Contact your instructor to
-              promote your account.
+              Your account does not have admin access. You are not a member of group 4.
             </p>
             <Link
               href="/"
@@ -89,7 +88,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </span>
             <Link
               href="/api/auth/signout"
-              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              className="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               Sign out
             </Link>
