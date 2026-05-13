@@ -182,12 +182,20 @@ export default function IssueList({
       ) : (
         <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
           <table className="w-full">
-            <thead className="sr-only">
-              <tr>
-                <th>Status</th>
-                <th>Title</th>
-                <th>Contact</th>
-                <th>Created</th>
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                <th className="pl-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="pr-4 py-2.5 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Created
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">

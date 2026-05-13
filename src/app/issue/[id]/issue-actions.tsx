@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 import type { IssueStatus } from "@/lib/types";
 import { ISSUE_STATUSES } from "@/lib/types";
 import { changeStatus, deleteIssueAction } from "./actions";
@@ -14,11 +14,11 @@ export const STATUS_COLORS: Record<IssueStatus, string> = {
   WONT_FIX: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
 };
 
-export const DROP_DOWN_COLORS: Record<IssueStatus, string> = {
-  OPEN: "text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  IN_PROGRESS: "text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  RESOLVED: "text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  WONT_FIX: "text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
+const STATUS_HOVER: Record<IssueStatus, string> = {
+  OPEN: "hover:bg-green-200 dark:hover:bg-green-900/50",
+  IN_PROGRESS: "hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+  RESOLVED: "hover:bg-purple-200 dark:hover:bg-purple-900/50",
+  WONT_FIX: "hover:bg-rose-200 dark:hover:bg-rose-900/50",
 };
 
 interface IssueActionsProps {
@@ -31,12 +31,28 @@ export default function IssueActions({
   currentStatus,
 }: IssueActionsProps) {
   const [status, setStatus] = useState<IssueStatus>(currentStatus);
+  const [open, setOpen] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
 
   function handleStatusChange(newStatus: IssueStatus) {
-    if (newStatus === status) return;
+    if (newStatus === status) {
+      setOpen(false);
+      return;
+    }
+    setOpen(false);
     setError("");
 
     startTransition(async () => {
@@ -51,13 +67,9 @@ export default function IssueActions({
 
   function handleDelete() {
     setError("");
-
     startTransition(async () => {
       const result = await deleteIssueAction(issueId);
-      if (!result.ok) {
-        setError(result.message);
-      }
-      // If ok, the server action redirects to /dashboard
+      if (!result.ok) setError(result.message);
     });
   }
 
@@ -65,22 +77,40 @@ export default function IssueActions({
     <div className="flex flex-col items-end gap-2">
       <div className="flex items-center gap-3">
         {/* Status dropdown */}
-        <select
-          value={status}
-          onChange={(e) => handleStatusChange(e.target.value as IssueStatus)}
-          disabled={isPending}
-          className={`text-sm border rounded pl-3 pr-8 py-1.5 font-medium cursor-pointer disabled:opacity-50 ${STATUS_COLORS[status]} border-gray-300 dark:border-gray-700`}
-        >
-          {ISSUE_STATUSES.map((s) => (
-            <option
-              key={s}
-              value={s}
-              className={`appearance-none text-sm border rounded pl-3 pr-8 py-1.5 font-medium cursor-pointer disabled:opacity-50 border-gray-700 ${DROP_DOWN_COLORS[s]}`}
+        <div ref={ref} className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            disabled={isPending}
+            className={`inline-flex items-center gap-1.5 text-sm border rounded-md px-3 py-1.5 font-medium cursor-pointer disabled:opacity-50 transition-shadow ${STATUS_COLORS[status]} border-gray-200 dark:border-gray-700`}
+          >
+            {status.replace("_", " ")}
+            <svg
+              className={`w-3.5 h-3.5 opacity-60 transition-transform ${open ? "rotate-180" : ""}`}
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
             >
-              {s.replace("_", " ")}
-            </option>
-          ))}
-        </select>
+              <path d="m4 6 4 4 4-4" />
+            </svg>
+          </button>
+
+          {open && (
+            <div className="absolute z-20 right-0 mt-1.5 w-40 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
+              {ISSUE_STATUSES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => handleStatusChange(s)}
+                  className={`w-full text-left text-sm px-3 py-2 font-medium transition-colors ${STATUS_COLORS[s]} ${STATUS_HOVER[s]} ${s === status ? "ring- ring-inset ring-gray-300 dark:ring-gray-600" : ""}`}
+                >
+                  {s.replace("_", " ")}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Delete button */}
         {!showConfirmDelete ? (
@@ -95,7 +125,7 @@ export default function IssueActions({
             <button
               onClick={handleDelete}
               disabled={isPending}
-              className="text-sm px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded font-medium disabled:opacity-50"
+              className="text-sm px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium disabled:opacity-50"
             >
               {isPending ? "Deleting..." : "Confirm"}
             </button>
