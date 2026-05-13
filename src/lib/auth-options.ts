@@ -8,9 +8,11 @@ export const authOptions: NextAuthOptions = {
       type: "oauth",
       clientId: process.env.OAUTH_CLIENT_ID,
       clientSecret: process.env.OAUTH_CLIENT_SECRET,
+      issuer: "https://tcss-460-iam.onrender.com",
+      jwks_endpoint: "https://tcss-460-iam.onrender.com/.well-known/jwks.json",
       authorization: {
         url: "https://tcss-460-iam.onrender.com/v2/oauth/authorize",
-        params: { scope: "openid profile email" },
+        params: { scope: "openid profile email", audience: "group-4-api" },
       },
       token: "https://tcss-460-iam.onrender.com/v2/oauth/token",
       userinfo: "https://tcss-460-iam.onrender.com/v2/oauth/userinfo",
