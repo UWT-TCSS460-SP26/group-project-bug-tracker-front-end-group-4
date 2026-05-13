@@ -14,6 +14,13 @@ export const STATUS_COLORS: Record<IssueStatus, string> = {
   WONT_FIX: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
 };
 
+export const DROP_DOWN_COLORS: Record<IssueStatus, string> = {
+  OPEN: "text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  IN_PROGRESS: "text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  RESOLVED: "text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  WONT_FIX: "text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
+};
+
 interface IssueActionsProps {
   issueId: number;
   currentStatus: IssueStatus;
@@ -58,27 +65,22 @@ export default function IssueActions({
     <div className="flex flex-col items-end gap-2">
       <div className="flex items-center gap-3">
         {/* Status dropdown */}
-        <div className="relative inline-block">
-          <select
-            value={status}
-            onChange={(e) => handleStatusChange(e.target.value as IssueStatus)}
-            disabled={isPending}
-            className={`text-sm border rounded pl-3 pr-8 py-1.5 font-medium appearance-none cursor-pointer disabled:opacity-50 ${STATUS_COLORS[status]} border-gray-300 dark:border-gray-700`}
-          >
-            {ISSUE_STATUSES.map((s) => (
-              <option
-                key={s}
-                value={s}
-                className={`text-sm border rounded pl-3 pr-8 py-1.5 font-medium cursor-pointer disabled:opacity-50 border-gray-700 ${STATUS_COLORS[s]}`}
-              >
-                {s.replace("_", " ")}
-              </option>
-            ))}
-          </select>
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-xs opacity-60">
-            ▼
-          </span>
-        </div>
+        <select
+          value={status}
+          onChange={(e) => handleStatusChange(e.target.value as IssueStatus)}
+          disabled={isPending}
+          className={`text-sm border rounded pl-3 pr-8 py-1.5 font-medium cursor-pointer disabled:opacity-50 ${STATUS_COLORS[status]} border-gray-300 dark:border-gray-700`}
+        >
+          {ISSUE_STATUSES.map((s) => (
+            <option
+              key={s}
+              value={s}
+              className={`appearance-none text-sm border rounded pl-3 pr-8 py-1.5 font-medium cursor-pointer disabled:opacity-50 border-gray-700 ${DROP_DOWN_COLORS[s]}`}
+            >
+              {s.replace("_", " ")}
+            </option>
+          ))}
+        </select>
 
         {/* Delete button */}
         {!showConfirmDelete ? (
