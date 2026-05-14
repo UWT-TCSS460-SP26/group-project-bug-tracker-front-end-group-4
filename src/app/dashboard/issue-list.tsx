@@ -26,7 +26,17 @@ const PAGE_SIZE = 20;
 export default function IssueList() {
   const { data: session, status: sessionStatus } = useSession();
 
-  const [statusFilter, setStatusFilter] = useState<IssueStatus[]>(["OPEN"]);
+  const [statusFilter, setStatusFilter] = useState<IssueStatus[]>(() => {
+    if (typeof window === "undefined") return ["OPEN"];
+    try {
+      const stored = sessionStorage.getItem("dashboard-statusFilter");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed as IssueStatus[];
+      }
+    } catch { /* ignore corrupt data */ }
+    return ["OPEN"];
+  });
   const [sortBy, setSortBy] = useState<SortByField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [page, setPage] = useState(1);
@@ -90,6 +100,13 @@ export default function IssueList() {
   useEffect(() => {
     fetchIssues();
   }, [fetchIssues]);
+
+  // Persist status filter so it survives back/forward navigation
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("dashboard-statusFilter", JSON.stringify(statusFilter));
+    } catch { /* quota exceeded or private browsing */ }
+  }, [statusFilter]);
 
   // Reset to page 1 when filters or sort change
   function updateFilters(updater: () => void) {
