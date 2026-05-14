@@ -14,13 +14,24 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-function getAuthHeaders(session: { accessToken: string } | null): Record<string, string> {
-  if (!session?.accessToken) return {};
-  return { Authorization: `Bearer ${session.accessToken}` };
+function getBearerToken(session: { accessToken?: string; idToken?: string } | null): string | null {
+  // Prefer id_token (always a JWT) over access_token (may be opaque)
+  return session?.idToken || session?.accessToken || null;
+}
+
+function getAuthHeaders(session: { accessToken?: string; idToken?: string } | null): Record<string, string> {
+  const token = getBearerToken(session);
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+function checkAuth(session: { accessToken?: string; idToken?: string } | null): session is { accessToken?: string; idToken?: string } & { accessToken: string } | { idToken: string } {
+  return !!session && !!(session.idToken || session.accessToken);
 }
 
 export async function getSessionForApi(): Promise<{
-  accessToken: string;
+  accessToken?: string;
+  idToken?: string;
 } | null> {
   return getServerSession(authOptions);
 }
@@ -32,7 +43,7 @@ export async function listIssues(
   | { ok: false; status: number; error: ApiError }
 > {
   const session = await getSessionForApi();
-  if (!session?.accessToken) {
+  if (!checkAuth(session)) {
     return { ok: false, status: 401, error: { message: "Not authenticated" } };
   }
 
@@ -66,7 +77,7 @@ export async function getIssue(
   | { ok: false; status: number; error: ApiError }
 > {
   const session = await getSessionForApi();
-  if (!session?.accessToken) {
+  if (!checkAuth(session)) {
     return { ok: false, status: 401, error: { message: "Not authenticated" } };
   }
 
@@ -87,7 +98,7 @@ export async function patchIssue(
   | { ok: false; status: number; error: ApiError }
 > {
   const session = await getSessionForApi();
-  if (!session?.accessToken) {
+  if (!checkAuth(session)) {
     return { ok: false, status: 401, error: { message: "Not authenticated" } };
   }
 
@@ -112,7 +123,7 @@ export async function deleteIssue(
   | { ok: false; status: number; error: ApiError }
 > {
   const session = await getSessionForApi();
-  if (!session?.accessToken) {
+  if (!checkAuth(session)) {
     return { ok: false, status: 401, error: { message: "Not authenticated" } };
   }
 
