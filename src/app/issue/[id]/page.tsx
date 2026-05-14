@@ -41,6 +41,9 @@ export default async function IssueDetailPage({
   const result = await getIssue(issueId);
 
   if (!result.ok) {
+    if (result.status === 401) {
+      redirect(`/api/auth/signin?callbackUrl=/issue/${id}`);
+    }
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8">
         <div className="max-w-6xl mx-auto">

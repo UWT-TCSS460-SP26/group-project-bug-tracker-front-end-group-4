@@ -44,6 +44,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   });
 
   if (!result.ok) {
+    if (result.status === 401) {
+      redirect("/api/auth/signin?callbackUrl=/dashboard");
+    }
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8">
         {result.status === 403 ? (

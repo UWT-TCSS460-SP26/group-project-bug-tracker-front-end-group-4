@@ -39,7 +39,14 @@ export default function IssueList({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [localStatus, setLocalStatus] = useState(currentStatus);
+  const [localStatus, setLocalStatus] = useState<IssueStatus | IssueStatus[] | undefined>(currentStatus ?? "OPEN");
+
+  useEffect(() => {
+    // Default to OPEN filter on first visit
+    if (currentStatus === undefined && !searchParams.has("status")) {
+      router.replace("/dashboard?status=OPEN");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setLocalStatus(currentStatus);
@@ -94,17 +101,12 @@ export default function IssueList({
 
   function formatDate(iso: string): string {
     const d = new Date(iso);
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 30) return `${diffDays} days ago`;
     return d.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     });
   }
 

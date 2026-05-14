@@ -21,6 +21,9 @@ export async function changeStatus(
   }
 
   const result = await patchIssue(id, { status });
+  if (!result.ok && result.status === 401) {
+    redirect("/api/auth/signin");
+  }
   if (result.ok) {
     revalidatePath(`/issue/${id}`);
     revalidatePath("/dashboard");
@@ -36,6 +39,9 @@ export async function deleteIssueAction(id: number): Promise<ActionResult> {
   }
 
   const result = await deleteIssue(id);
+  if (!result.ok && result.status === 401) {
+    redirect("/api/auth/signin");
+  }
   if (result.ok) {
     revalidatePath("/dashboard");
     redirect("/dashboard");
