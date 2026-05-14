@@ -24,7 +24,7 @@ The backend API contract is defined in `openapi.yaml` at the repo root. The READ
 | Route | Auth | Component type | Purpose |
 |---|---|---|---|
 | `/` | None (public) | Client (`"use client"`) | Issue submission form — `POST /issues` |
-| `/dashboard` | Admin (next-auth) | Server (async) | Paginated issue list with status filter, sort, pagination |
+| `/dashboard` | Admin (next-auth) | Server (auth) + Client (data) | Issue list with client-side filtering, sort, pagination |
 | `/issue/[id]` | Admin (next-auth) | Server (async) | Issue detail, status change (PATCH), delete (DELETE) |
 | `/api/auth/[...nextauth]` | — | Route handler | NextAuth v4 — sign-in/sign-out/callback |
 
@@ -53,7 +53,8 @@ Actual session verification happens in each protected page's server component vi
 3. Calls the BE at `NEXT_PUBLIC_API_URL` (from env)
 4. Returns a discriminated union `{ ok: true, data }` or `{ ok: false, status, error }`
 
-**Never** call `fetch()` directly against the BE from a component — always go through `src/lib/api.ts` so the auth header is attached.
+**Server components**: Go through `src/lib/api.ts` so `getServerSession()` attaches the auth header automatically.
+**Client components**: Call `fetch()` directly with the token from `useSession()` (`session.accessToken`). Attach it as `Authorization: Bearer ${session.accessToken}`.
 
 ### Server actions
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import type { Issue, Pagination, IssueStatus, SortByField, SortOrder } from "@/lib/types";
 import { ISSUE_STATUSES } from "@/lib/types";
@@ -21,82 +21,95 @@ const SORT_LABELS: Record<SortByField, string> = {
   title: "Title",
 };
 
-interface IssueListProps {
-  issues: Issue[];
-  pagination: Pagination;
-  currentStatus?: IssueStatus | IssueStatus[];
-  currentSortBy: SortByField;
-  currentSortOrder: SortOrder;
-}
+const PAGE_SIZE = 20;
 
-export default function IssueList({
-  issues,
-  pagination,
-  currentStatus,
-  currentSortBy,
-  currentSortOrder,
-}: IssueListProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export default function IssueList() {
+  const { data: session, status: sessionStatus } = useSession();
 
-  const [localStatus, setLocalStatus] = useState<IssueStatus | IssueStatus[] | undefined>(currentStatus ?? "OPEN");
+  const [statusFilter, setStatusFilter] = useState<IssueStatus[]>(["OPEN"]);
+  const [sortBy, setSortBy] = useState<SortByField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    // Default to OPEN filter on first visit
-    if (currentStatus === undefined && !searchParams.has("status")) {
-      router.replace("/dashboard?status=OPEN");
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    setLocalStatus(currentStatus);
-  }, [currentStatus]);
+  const fetchIssues = useCallback(async () => {
+    if (sessionStatus !== "authenticated" || !session?.accessToken) return;
 
-  function updateQuery(updates: Record<string, string | string[] | undefined>) {
-    const next = new URLSearchParams(searchParams.toString());
+    setLoading(true);
+    setError("");
 
-    for (const [key, value] of Object.entries(updates)) {
-      next.delete(key);
-      if (value === undefined) continue;
-      if (Array.isArray(value)) {
-        value.forEach((v) => next.append(key, v));
-      } else {
-        next.set(key, value);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("limit", String(PAGE_SIZE));
+      params.set("sortBy", sortBy);
+      params.set("sortOrder", sortOrder);
+      statusFilter.forEach((s) => params.append("status", s));
+
+      const res = await fetch(`${apiUrl}/issues?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+
+      if (res.status === 401) {
+        window.location.href = "/api/auth/signin";
+        return;
       }
-    }
 
-    // Reset to page 1 when filters change
-    if (!("page" in updates)) {
-      next.delete("page");
-    }
+      if (res.status === 403) {
+        setError("Your account does not have admin access.");
+        setIssues([]);
+        setPagination(null);
+        return;
+      }
 
-    router.push(`/dashboard?${next.toString()}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ message: "Could not load issues." }));
+        setError(body.message || "Could not load issues.");
+        setIssues([]);
+        setPagination(null);
+        return;
+      }
+
+      const body = await res.json();
+      setIssues(body.issues);
+      setPagination(body.pagination);
+    } catch {
+      setError("Could not reach the server. Please check your connection.");
+      setIssues([]);
+      setPagination(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [session, sessionStatus, page, sortBy, sortOrder, statusFilter]);
+
+  useEffect(() => {
+    fetchIssues();
+  }, [fetchIssues]);
+
+  // Reset to page 1 when filters or sort change
+  function updateFilters(updater: () => void) {
+    setPage(1);
+    updater();
   }
 
   function toggleStatus(status: IssueStatus) {
-    const current = new Set(
-      Array.isArray(localStatus)
-        ? localStatus
-        : localStatus
-          ? [localStatus]
-          : []
-    );
-
-    if (current.has(status)) {
-      current.delete(status);
-    } else {
-      current.add(status);
-    }
-
-    const arr = Array.from(current);
-    setLocalStatus(arr.length > 0 ? arr : undefined);
-    updateQuery({ status: arr.length > 0 ? arr : undefined });
+    updateFilters(() => {
+      setStatusFilter((prev) => {
+        if (prev.includes(status)) {
+          return prev.filter((s) => s !== status);
+        }
+        return [...prev, status];
+      });
+    });
   }
 
   function isStatusActive(status: IssueStatus): boolean {
-    if (!localStatus) return false;
-    if (Array.isArray(localStatus)) return localStatus.includes(status);
-    return localStatus === status;
+    return statusFilter.includes(status);
   }
 
   function formatDate(iso: string): string {
@@ -110,7 +123,25 @@ export default function IssueList({
     });
   }
 
-  const totalPages = pagination.totalPages;
+  // Auth loading state
+  if (sessionStatus === "loading") {
+    return (
+      <div className="text-center py-16 text-gray-500 dark:text-gray-400">
+        Loading...
+      </div>
+    );
+  }
+
+  // Not authenticated
+  if (sessionStatus === "unauthenticated") {
+    return (
+      <div className="text-center py-16 text-gray-500 dark:text-gray-400">
+        Please sign in to view issues.
+      </div>
+    );
+  }
+
+  const totalPages = pagination?.totalPages ?? 1;
   const showPagination = totalPages > 1;
 
   return (
@@ -146,9 +177,9 @@ export default function IssueList({
             Sort:
           </span>
           <select
-            value={currentSortBy}
+            value={sortBy}
             onChange={(e) =>
-              updateQuery({ sortBy: e.target.value as SortByField })
+              updateFilters(() => setSortBy(e.target.value as SortByField))
             }
             className="text-sm border border-gray-300 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
           >
@@ -162,22 +193,31 @@ export default function IssueList({
           </select>
           <button
             onClick={() =>
-              updateQuery({
-                sortOrder: currentSortOrder === "asc" ? "desc" : "asc",
-              })
+              updateFilters(() =>
+                setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+              )
             }
             className="text-sm border border-gray-300 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-            title={
-              currentSortOrder === "asc" ? "Descending" : "Ascending"
-            }
+            title={sortOrder === "asc" ? "Descending" : "Ascending"}
           >
-            {currentSortOrder === "asc" ? "\u2191" : "\u2193"}
+            {sortOrder === "asc" ? "\u2191" : "\u2193"}
           </button>
         </div>
       </div>
 
+      {/* Error banner */}
+      {error && !loading && (
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+          {error}
+        </div>
+      )}
+
       {/* Issue table */}
-      {issues.length === 0 ? (
+      {loading && issues.length === 0 ? (
+        <div className="text-center py-16 text-gray-500 dark:text-gray-400">
+          Loading issues...
+        </div>
+      ) : issues.length === 0 && !loading ? (
         <div className="text-center py-16 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
           No issues found.
         </div>
@@ -236,25 +276,32 @@ export default function IssueList({
         </div>
       )}
 
+      {/* Loading overlay for subsequent page loads */}
+      {loading && issues.length > 0 && (
+        <div className="text-center py-4 text-sm text-gray-400 dark:text-gray-500">
+          Updating...
+        </div>
+      )}
+
       {/* Pagination */}
       {showPagination && (
         <div className="flex items-center justify-between mt-4 text-sm text-gray-600 dark:text-gray-400">
           <button
-            disabled={pagination.page <= 1}
-            onClick={() => updateQuery({ page: String(pagination.page - 1) })}
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
             className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Previous
           </button>
           <span>
-            Page {pagination.page} of {pagination.totalPages}{" "}
+            Page {pagination?.page ?? page} of {totalPages}{" "}
             <span className="text-gray-400">
-              ({pagination.total} issues)
+              ({pagination?.total ?? 0} issues)
             </span>
           </span>
           <button
-            disabled={pagination.page >= pagination.totalPages}
-            onClick={() => updateQuery({ page: String(pagination.page + 1) })}
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
             className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Next
