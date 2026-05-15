@@ -82,7 +82,7 @@ export default function IssueActions({
             type="button"
             onClick={() => setOpen(!open)}
             disabled={isPending}
-            className={`inline-flex items-center gap-1.5 text-sm border rounded-md px-3 py-1.5 font-medium cursor-pointer disabled:opacity-50 transition-shadow ${STATUS_COLORS[status]} border-gray-200 dark:border-gray-700`}
+            className={`inline-flex items-center gap-1.5 text-sm border rounded-md px-3 py-1.5 font-medium cursor-pointer disabled:opacity-50 transition-shadow ${STATUS_COLORS[status]} border-zinc-200 dark:border-zinc-700`}
           >
             {status.replace("_", " ")}
             <svg
@@ -97,13 +97,13 @@ export default function IssueActions({
           </button>
 
           {open && (
-            <div className="absolute z-20 right-0 mt-1.5 w-40 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
+            <div className="absolute z-20 right-0 mt-1.5 w-40 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden">
               {ISSUE_STATUSES.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => handleStatusChange(s)}
-                  className={`w-full text-left text-sm px-3 py-2 font-medium transition-colors ${STATUS_COLORS[s]} ${STATUS_HOVER[s]} ${s === status ? "ring- ring-inset ring-gray-300 dark:ring-gray-600" : ""}`}
+                  className={`w-full text-left text-sm px-3 py-2 font-medium transition-colors ${STATUS_COLORS[s]} ${STATUS_HOVER[s]} ${s === status ? "ring- ring-inset ring-zinc-300 dark:ring-zinc-600" : ""}`}
                 >
                   {s.replace("_", " ")}
                 </button>
@@ -132,7 +132,7 @@ export default function IssueActions({
             <button
               onClick={() => setShowConfirmDelete(false)}
               disabled={isPending}
-              className="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="text-sm px-3 py-1.5 border border-zinc-300 dark:border-zinc-600 rounded-md font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50 transition-colors"
             >
               Cancel
             </button>
