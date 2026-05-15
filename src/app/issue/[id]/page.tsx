@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth-options";
-import { getIssue } from "@/lib/api";
+import { getIssue, requireAdmin } from "@/lib/api";
 import IssueActions, { STATUS_COLORS } from "./issue-actions";
 
 interface IssueDetailPageProps {
@@ -18,6 +18,9 @@ export default async function IssueDetailPage({
   if (!session) {
     redirect(`/api/auth/signin?callbackUrl=/issue/${id}`);
   }
+
+  await requireAdmin();
+
   const issueId = parseInt(id, 10);
 
   if (isNaN(issueId)) {

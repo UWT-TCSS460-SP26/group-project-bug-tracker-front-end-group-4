@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth-options";
+import { requireAdmin } from "@/lib/api";
 import IssueList from "./issue-list";
 
 export default async function DashboardPage() {
@@ -9,6 +10,8 @@ export default async function DashboardPage() {
   if (!session) {
     redirect("/api/auth/signin?callbackUrl=/dashboard");
   }
+
+  await requireAdmin();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">

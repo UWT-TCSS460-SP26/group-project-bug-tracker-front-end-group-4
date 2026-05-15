@@ -9,6 +9,21 @@ export const ISSUE_STATUSES: IssueStatus[] = [
   "WONT_FIX",
 ];
 
+export type UserRole = "User" | "Moderator" | "Admin" | "SuperAdmin" | "Owner";
+
+export const ADMIN_ROLES: UserRole[] = ["Admin", "SuperAdmin", "Owner"];
+
+export interface UserProfileResponse {
+  user: {
+    userId: number;
+    username: string;
+    email: string;
+    subjectId: string;
+    role: UserRole;
+    createdAt: string;
+  };
+}
+
 export type SortByField = "createdAt" | "status" | "title";
 
 export type SortOrder = "asc" | "desc";

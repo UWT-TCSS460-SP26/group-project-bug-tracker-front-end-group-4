@@ -1,5 +1,7 @@
 import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth-options";
+import { ADMIN_ROLES } from "@/lib/types";
 import type {
   Issue,
   IssueListResponse,
@@ -10,6 +12,8 @@ import type {
   ListIssuesParams,
   PatchIssueRequest,
   ApiError,
+  UserRole,
+  UserProfileResponse,
 } from "@/lib/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -23,6 +27,42 @@ export async function getSessionForApi(): Promise<{
   accessToken: string;
 } | null> {
   return getServerSession(authOptions);
+}
+
+export async function getMyRole(): Promise<UserRole | null> {
+  const session = await getSessionForApi();
+  if (!session?.accessToken) return null;
+
+  try {
+    const res = await fetch(`${API_URL}/api/users/me`, {
+      headers: getAuthHeaders(session),
+    });
+    if (!res.ok) {
+      console.error("getMyRole: non-ok response", res.status);
+      return null;
+    }
+    const body: UserProfileResponse = await res.json();
+    return body.user.role;
+  } catch (err) {
+    console.error("getMyRole: fetch failed", err);
+    return null;
+  }
+}
+
+/** Server-component guard: redirects non-admin users away. */
+export async function requireAdmin(): Promise<UserRole> {
+  const role = await getMyRole();
+  if (!role || !ADMIN_ROLES.includes(role)) {
+    redirect("/?error=unauthorized");
+  }
+  return role;
+}
+
+/** Server-action guard: returns null for non-admin users so the caller can return an error. */
+export async function checkAdmin(): Promise<UserRole | null> {
+  const role = await getMyRole();
+  if (!role || !ADMIN_ROLES.includes(role)) return null;
+  return role;
 }
 
 export async function listIssues(
