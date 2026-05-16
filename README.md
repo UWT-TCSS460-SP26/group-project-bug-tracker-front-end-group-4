@@ -1,3 +1,5 @@
 # Bug Tracker Front End: Group 4
 
-Empty placeholder repository for now
+Deployed Backend url: <https://group-project-backend-group-4.onrender.com/>
+Local Backend url: <http://localhost:3000>
+API Docs: [in repo](openapi.yaml)
