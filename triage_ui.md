@@ -1,6 +1,6 @@
 # Triage UI
 
-You are to design a UI for a triage system that managues issues, the backend API is already built, and the API specs can be found [here](openapi.yaml).
+You are to design a UI for a triage system that managues issues, the backend API is already built, and the API specs can be found [here](https://github.com/UWT-TCSS460-SP26/group-project-backend-group-4/blob/main/openapi.yaml).
 
 ## Routes
 
