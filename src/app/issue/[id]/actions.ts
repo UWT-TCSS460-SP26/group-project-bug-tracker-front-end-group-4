@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth-options";
 import { patchIssue, deleteIssue, checkAdmin } from "@/lib/api";
-import type { IssueStatus, IssuePatchResponse, IssueDeleteResponse } from "@/lib/types";
+import type {
+  IssueStatus,
+  IssuePatchResponse,
+  IssueDeleteResponse,
+} from "@/lib/types";
 
 export type ActionResult =
   | { ok: true; data: IssuePatchResponse | IssueDeleteResponse }
@@ -13,7 +17,7 @@ export type ActionResult =
 
 export async function changeStatus(
   id: number,
-  status: IssueStatus
+  status: IssueStatus,
 ): Promise<ActionResult> {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -33,7 +37,10 @@ export async function changeStatus(
     revalidatePath("/dashboard");
     return { ok: true, data: result.data };
   }
-  return { ok: false, message: result.error.message || "Failed to update status" };
+  return {
+    ok: false,
+    message: result.error.message || "Failed to update status",
+  };
 }
 
 export async function deleteIssueAction(id: number): Promise<ActionResult> {
@@ -54,5 +61,8 @@ export async function deleteIssueAction(id: number): Promise<ActionResult> {
     revalidatePath("/dashboard");
     redirect("/dashboard");
   }
-  return { ok: false, message: result.error.message || "Failed to delete issue" };
+  return {
+    ok: false,
+    message: result.error.message || "Failed to delete issue",
+  };
 }

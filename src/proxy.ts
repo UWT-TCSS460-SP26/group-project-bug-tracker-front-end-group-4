@@ -5,7 +5,7 @@ const PROTECTED_PREFIXES = ["/dashboard", "/issue"];
 
 function isProtected(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
 

@@ -3,7 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import type { Issue, Pagination, IssueStatus, SortByField, SortOrder } from "@/lib/types";
+import type {
+  Issue,
+  Pagination,
+  IssueStatus,
+  SortByField,
+  SortOrder,
+} from "@/lib/types";
 import { ISSUE_STATUSES } from "@/lib/types";
 
 const STATUS_COLORS: Record<IssueStatus, string> = {
@@ -33,9 +39,12 @@ export default function IssueList() {
       const stored = sessionStorage.getItem("dashboard-statusFilter");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed as IssueStatus[];
+        if (Array.isArray(parsed) && parsed.length > 0)
+          return parsed as IssueStatus[];
       }
-    } catch { /* ignore corrupt data */ }
+    } catch {
+      /* ignore corrupt data */
+    }
     return ["OPEN"];
   });
   const [sortBy, setSortBy] = useState<SortByField>("createdAt");
@@ -79,7 +88,9 @@ export default function IssueList() {
       }
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({ message: "Could not load issues." }));
+        const body = await res
+          .json()
+          .catch(() => ({ message: "Could not load issues." }));
         setError(body.message || "Could not load issues.");
         setIssues([]);
         setPagination(null);
@@ -105,8 +116,13 @@ export default function IssueList() {
   // Persist status filter so it survives back/forward navigation
   useEffect(() => {
     try {
-      sessionStorage.setItem("dashboard-statusFilter", JSON.stringify(statusFilter));
-    } catch { /* quota exceeded or private browsing */ }
+      sessionStorage.setItem(
+        "dashboard-statusFilter",
+        JSON.stringify(statusFilter),
+      );
+    } catch {
+      /* quota exceeded or private browsing */
+    }
   }, [statusFilter]);
 
   // Reset to page 1 when filters or sort change
@@ -206,13 +222,13 @@ export default function IssueList() {
                 <option key={key} value={key}>
                   {label}
                 </option>
-              )
+              ),
             )}
           </select>
           <button
             onClick={() =>
               updateFilters(() =>
-                setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+                setSortOrder((prev) => (prev === "asc" ? "desc" : "asc")),
               )
             }
             className="text-sm border border-zinc-300 dark:border-zinc-700 rounded px-2 py-1 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"

@@ -18,7 +18,9 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-function getAuthHeaders(session: { accessToken: string } | null): Record<string, string> {
+function getAuthHeaders(
+  session: { accessToken: string } | null,
+): Record<string, string> {
   if (!session?.accessToken) return {};
   return { Authorization: `Bearer ${session.accessToken}` };
 }
@@ -66,7 +68,7 @@ export async function checkAdmin(): Promise<UserRole | null> {
 }
 
 export async function listIssues(
-  params: ListIssuesParams = {}
+  params: ListIssuesParams = {},
 ): Promise<
   | { ok: true; data: IssueListResponse }
   | { ok: false; status: number; error: ApiError }
@@ -100,7 +102,7 @@ export async function listIssues(
 }
 
 export async function getIssue(
-  id: number
+  id: number,
 ): Promise<
   | { ok: true; data: IssueSingleResponse }
   | { ok: false; status: number; error: ApiError }
@@ -121,7 +123,7 @@ export async function getIssue(
 
 export async function patchIssue(
   id: number,
-  data: PatchIssueRequest
+  data: PatchIssueRequest,
 ): Promise<
   | { ok: true; data: IssuePatchResponse }
   | { ok: false; status: number; error: ApiError }
@@ -146,7 +148,7 @@ export async function patchIssue(
 }
 
 export async function deleteIssue(
-  id: number
+  id: number,
 ): Promise<
   | { ok: true; data: IssueDeleteResponse }
   | { ok: false; status: number; error: ApiError }

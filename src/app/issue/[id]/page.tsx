@@ -177,7 +177,9 @@ export default async function IssueDetailPage({
             </div>
             <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 text-sm text-zinc-500 dark:text-zinc-400">
               Contact:{" "}
-              <span className="text-zinc-700 dark:text-zinc-300">{issue.contact}</span>
+              <span className="text-zinc-700 dark:text-zinc-300">
+                {issue.contact}
+              </span>
             </div>
           </div>
         </div>

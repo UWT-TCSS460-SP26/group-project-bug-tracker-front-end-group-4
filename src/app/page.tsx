@@ -4,6 +4,7 @@ import { type FormEvent, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface FieldError {
   path: string;
@@ -19,7 +20,11 @@ function getFieldError(path: string, errors: Record<string, string>): string {
   return errors[path] || "";
 }
 
-function Header({ session }: { session: { user?: { email?: string | null } } | null }) {
+function Header({
+  session,
+}: {
+  session: { user?: { email?: string | null } } | null;
+}) {
   return (
     <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
@@ -120,7 +125,7 @@ export default function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -164,34 +169,64 @@ export default function Home() {
       }
 
       setServerMessage(
-        "Something went wrong on our end. Please try again later."
+        "Something went wrong on our end. Please try again later.",
       );
       setStatus("network-error");
     } catch {
       setServerMessage(
-        "Could not reach the server. Please check your connection and try again."
+        "Could not reach the server. Please check your connection and try again.",
       );
       setStatus("network-error");
     }
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-black">
-      <Header session={session} />
+    <div className="relative flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-black">
+      <div
+        className="absolute inset-0 z-0 pointer-events-none hidden dark:grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 select-none overflow-hidden opacity-[0.09]"
+        style={{ gridAutoRows: "1fr" }}
+      >
+        {(() => {
+          const imgs = [
+            "kermit.jpeg",
+            "kermit2.jpg",
+            "kermit3.jpeg",
+            "kermit4.jpg",
+            "kermit5.jpg",
+            "kermit6.jpg",
+            "kermit7.jpg",
+          ];
+          const tiles: string[] = [];
+          for (let i = 0; i < 80; i++) tiles.push(imgs[i % imgs.length]);
+          return tiles.map((img, i) => (
+            <Image
+              width={400}
+              height={400}
+              key={i}
+              src={`/res/${img}`}
+              alt="Kermit image"
+              className="w-full h-full object-cover"
+            />
+          ));
+        })()}
+      </div>
+      <div className="relative z-10 flex flex-col flex-1">
+        <Header session={session} />
 
-      <Suspense>
-        <ErrorGate>
-          <Body
-            status={status}
-            formData={formData}
-            fieldErrors={fieldErrors}
-            serverMessage={serverMessage}
-            onChange={handleChange}
-            onSubmit={handleSubmit}
-            onReset={() => setStatus("idle")}
-          />
-        </ErrorGate>
-      </Suspense>
+        <Suspense>
+          <ErrorGate>
+            <Body
+              status={status}
+              formData={formData}
+              fieldErrors={fieldErrors}
+              serverMessage={serverMessage}
+              onChange={handleChange}
+              onSubmit={handleSubmit}
+              onReset={() => setStatus("idle")}
+            />
+          </ErrorGate>
+        </Suspense>
+      </div>
     </div>
   );
 }
@@ -209,7 +244,9 @@ function Body({
   formData: { title: string; body: string; contact: string };
   fieldErrors: Record<string, string>;
   serverMessage: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void;
   onSubmit: (e: FormEvent) => void;
   onReset: () => void;
 }) {
@@ -269,12 +306,11 @@ function Body({
         )}
 
         {/* Generic validation message (not field-specific) */}
-        {status === "validation-error" &&
-          !Object.keys(fieldErrors).length && (
-            <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
-              Please correct the errors below and try again.
-            </div>
-          )}
+        {status === "validation-error" && !Object.keys(fieldErrors).length && (
+          <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            Please correct the errors below and try again.
+          </div>
+        )}
 
         <form onSubmit={onSubmit} noValidate className="space-y-5">
           {/* Title */}
